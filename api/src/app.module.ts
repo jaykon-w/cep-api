@@ -9,6 +9,7 @@ import { BusinessErrorFilter } from './shared/filters/business-error.filter';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { MongoErrorFilter } from './shared/filters/mongo-error.filter';
 import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { UserModule } from './user/user.module';
       ],
     }),
     UserModule,
+    AuthModule,
   ],
   providers: [
     {

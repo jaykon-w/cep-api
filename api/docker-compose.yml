@@ -1,0 +1,16 @@
+version: '3.2'
+
+services:
+  api:
+    image: fortest/api:latest
+    networks:
+      - api
+      - elk
+      - db
+    ports:
+      - 3001:3001
+
+networks:
+  api:
+  elk:
+  db:

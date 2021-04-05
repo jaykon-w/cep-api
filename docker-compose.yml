@@ -1,0 +1,109 @@
+version: "3.2"
+
+services:
+  db:
+    image: mongo:4.2
+    command: [--auth]
+    volumes:
+      - "./docker/volumes/mongo:/data/db"
+      - "./docker/configs/mongo:/docker-entrypoint-initdb.d"
+    ports:
+      - "${DB_PORT:-27017}:27017"
+    networks:
+      - db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  redis:
+    image: "bitnami/redis:latest"
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    networks:
+      - db
+    environment:
+      - "REDIS_PASSWORD=${REDIS_PASSWORD}"
+    volumes:
+      - "./docker/volumes/redis:/bitnami/redis/data"
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  elasticsearch:
+    build:
+      context: docker-elk/elasticsearch/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - type: bind
+        source: ./docker-elk/elasticsearch/config/elasticsearch.yml
+        target: /usr/share/elasticsearch/config/elasticsearch.yml
+        read_only: true
+      - type: volume
+        source: elasticsearch
+        target: /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ELASTIC_PASSWORD: changeme
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
+      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      discovery.type: single-node
+    networks:
+      - elk
+
+  logstash:
+    build:
+      context: docker-elk/logstash/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - type: bind
+        source: ./docker-elk/logstash/config/logstash.yml
+        target: /usr/share/logstash/config/logstash.yml
+        read_only: true
+      - type: bind
+        source: ./docker-elk/logstash/pipeline
+        target: /usr/share/logstash/pipeline
+        read_only: true
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    build:
+      context: docker-elk/kibana/
+      args:
+        ELK_VERSION: $ELK_VERSION
+    volumes:
+      - type: bind
+        source: ./docker-elk/kibana/config/kibana.yml
+        target: /usr/share/kibana/config/kibana.yml
+        read_only: true
+    ports:
+      - "5601:5601"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+
+volumes:
+  elasticsearch:
+
+networks:
+  db:
+  elk:
+    driver: overlay

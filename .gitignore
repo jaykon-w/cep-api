@@ -110,4 +110,4 @@ dist
 /docker/volumes/redis/*
 !/docker/volumes/redis/.gitkeep
 
-./docker-compose.yml
+docker-compose.yml

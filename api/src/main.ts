@@ -7,10 +7,10 @@ import { WINSTON_MODULE_NEST_PROVIDER } from '@payk/nestjs-winston';
 import * as compression from 'compression';
 import * as helmet from 'helmet';
 import { AppModule } from './app.module';
+import { BusinessError, ERRORS } from './shared/errors/business.error';
 import { ping } from './shared/middlewares/ping';
 import { loggingTest } from './shared/middlewares/testLogging';
 import { version } from './shared/middlewares/version';
-import { BusinessError, ERRORS } from './shared/errors/business.error';
 
 const errorHandler = (err, req, res, next) => {
   Logger.error(err);
@@ -45,9 +45,9 @@ async function bootstrap() {
     .setDescription('API documentation')
     .setVersion('1.0')
     .addBearerAuth()
+    .addServer(`http://localhost:${process.env.PORT}`)
     .addServer(`http://${process.env.API_EXTERNAL_HOST}`)
     .addServer(`https://${process.env.API_EXTERNAL_HOST}`)
-    .addServer(`http://localhost:${process.env.PORT}`)
     .build();
 
   const document = SwaggerModule.createDocument(app, options);

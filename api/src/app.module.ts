@@ -10,6 +10,7 @@ import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { MongoErrorFilter } from './shared/filters/mongo-error.filter';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { AddressModule } from './address/address.module';
 
 @Module({
   imports: [
@@ -18,12 +19,14 @@ import { AuthModule } from './auth/auth.module';
       useNewUrlParser: true,
       useFindAndModify: false,
       useUnifiedTopology: true,
+      loggerLevel: process.env.LOG_LEVEL,
     }),
     WinstonModule.forRoot({
       level: process.env.LOG_LEVEL || 'info',
       transports: [
         new winston.transports.Console(),
         new WinstonLogStash({
+          level: process.env.LOG_LEVEL || 'info',
           port: 5000,
           label: 'cep_api',
           host: process.env.LOG_HOST,
@@ -31,8 +34,9 @@ import { AuthModule } from './auth/auth.module';
         }),
       ],
     }),
-    UserModule,
+    AddressModule,
     AuthModule,
+    UserModule,
   ],
   providers: [
     {

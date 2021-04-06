@@ -1,6 +1,22 @@
 version: "3.2"
 
 services:
+  api:
+    build:
+      context: api/
+    env_file:
+      - "${FILE}"
+    networks:
+      - api
+      - elk
+      - db
+    ports:
+      - 3001:3001
+    depends_on:
+      - logstash
+      - db
+      - redis
+
   db:
     image: mongo:4.2
     command: [--auth]
@@ -8,7 +24,7 @@ services:
       - "./docker/volumes/mongo:/data/db"
       - "./docker/configs/mongo:/docker-entrypoint-initdb.d"
     ports:
-      - "${DB_PORT:-27017}:27017"
+      - "${DB_EXPOSED_PORT:-27017}:27017"
     networks:
       - db
     environment:
@@ -21,7 +37,7 @@ services:
   redis:
     image: "bitnami/redis:latest"
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${REDIS_EXPOSED_PORT:-6379}:6379"
     networks:
       - db
     environment:
@@ -106,4 +122,4 @@ volumes:
 networks:
   db:
   elk:
-    driver: overlay
+  api:

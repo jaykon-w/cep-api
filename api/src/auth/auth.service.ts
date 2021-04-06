@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import * as ioredis from 'ioredis';
 import * as jwt from 'jsonwebtoken';
 import { InjectRedis } from '../shared/redis/redis.module';
+import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 
@@ -34,15 +35,13 @@ export class AuthService {
     return token;
   }
 
-  async checkUser(
-    token: string,
-    ip: string,
-  ): Promise<{ email: string } | null> {
+  async checkUser(token: string, ip: string): Promise<User | null> {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const userIP: string = await this.getLoggedUser(decoded['email']);
 
     if (userIP !== ip) return null;
-    return decoded as any;
+    const user = await this.userService.findByEmail(decoded['email']);
+    return user;
   }
 
   private async getLoggedUser(email: string) {

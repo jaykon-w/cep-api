@@ -15,7 +15,8 @@ export class UserService {
     private readonly userModel: ReturnModelType<typeof User>,
   ) {}
 
-  create(createUserDto: CreateUserDto) {
+  @BindDocTo(User)
+  create(createUserDto: CreateUserDto): Promise<User> {
     return this.userModel.create(createUserDto);
   }
 
@@ -32,7 +33,7 @@ export class UserService {
   @Cacheable({
     cacheKey: (args) => args[0],
     hashKey: 'userByEmail',
-    client: clientAdapter,
+    client: clientAdapter.client(),
     ttlSeconds: 60 * 60,
   })
   findByEmail(email: string): Promise<User | null> {

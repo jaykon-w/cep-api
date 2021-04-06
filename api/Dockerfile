@@ -32,6 +32,6 @@ COPY --from=0 /prod/dist    /app/dist
 
 ADD ["package.json", "./"]
 
-EXPOSE 3000
+EXPOSE 3001
 
 CMD ["npm", "run", "start:prod"]

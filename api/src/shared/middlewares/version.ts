@@ -6,6 +6,6 @@ const VERSION = fs
   .toString();
 
 export function version(req, res, next) {
-  res.json({ version: VERSION.trim() });
+  res.json({ version: JSON.parse(VERSION.trim()).version });
   next();
 }

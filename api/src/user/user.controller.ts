@@ -9,10 +9,11 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { WinstonLogger } from '@payk/nestjs-winston';
-import { EMPTY, Observable, of } from 'rxjs';
-import { mergeMap, throwIfEmpty } from 'rxjs/operators';
-import { AppGuard } from '../auth/guard/auth.guard';
+import { EMPTY, from, Observable, of } from 'rxjs';
+import { mergeMap, tap, throwIfEmpty } from 'rxjs/operators';
+import { AuthGuard } from '../auth/guard/auth.guard';
 import { SecurityContext } from '../shared/decorators/security-context.decorator';
+import { throwNotFoundIfEmpty$ } from '../shared/observables/throw-not-found-if-empty.observable';
 import { transform$ } from '../shared/observables/transform.observable';
 import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
@@ -29,20 +30,22 @@ export class UserController {
   @Post()
   @HttpCode(201)
   @ApiOperation({ summary: 'Create a new user' })
-  async create(@Body() createUserDto: CreateUserDto): Promise<void> {
-    await this.userService.create(createUserDto);
+  create(@Body() createUserDto: CreateUserDto): Observable<UserRo> {
+    return from(this.userService.create(createUserDto)).pipe(
+      transform$(UserRo),
+      tap((created) =>
+        this.logger.debug(
+          `user created: ${JSON.stringify(created, undefined, 2)}`,
+        ),
+      ),
+    );
   }
 
   @Get()
-  @UseGuards(AppGuard)
+  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get your user' })
   findMe(@SecurityContext() user: User): Observable<UserRo> {
-    this.logger.error('OIEEE');
-    return of(user).pipe(
-      mergeMap((e) => (e ? of(e) : EMPTY)),
-      throwIfEmpty(() => new NotFoundException()),
-      transform$(UserRo),
-    );
+    return of(user).pipe(throwNotFoundIfEmpty$(), transform$(UserRo));
   }
 }

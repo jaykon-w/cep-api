@@ -6,27 +6,20 @@ import {
 } from '@nestjs/common';
 import { WinstonLogger } from '@payk/nestjs-winston';
 import { Request, Response } from 'express';
-import { UserService } from '../../user/user.service';
+import { User } from '../../user/entities/user.entity';
 import { AuthService } from '../auth.service';
 
 @Injectable()
-export class AppGuard implements CanActivate {
-  private readonly logger = new WinstonLogger(AppGuard.name);
+export class AuthGuard implements CanActivate {
+  private readonly logger = new WinstonLogger(AuthGuard.name);
 
-  constructor(
-    private authService: AuthService,
-    private userService: UserService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
     const res = context.switchToHttp().getResponse();
 
-    const autenticatedEmail = await this.authenticate(req, res);
-    if (!autenticatedEmail) throw new UnauthorizedException();
-
-    const user = await this.userService.findByEmail(autenticatedEmail);
-
+    const user = await this.authenticate(req, res);
     if (!user) throw new UnauthorizedException();
     res.locals.user = user;
 
@@ -36,7 +29,7 @@ export class AppGuard implements CanActivate {
   private async authenticate(
     req: Request,
     res: Response,
-  ): Promise<string | null> {
+  ): Promise<User | null> {
     if (
       !req.headers.authorization ||
       req.headers.authorization.split(' ')[0] !== 'Bearer'
@@ -46,8 +39,8 @@ export class AppGuard implements CanActivate {
     const authToken = req.headers.authorization.split(' ')[1];
     const remoteIP = (req.headers['x-forwarded-for'] || req.ip) as string;
     try {
-      const _auth = await this.authService.checkUser(authToken, remoteIP);
-      return _auth?.email;
+      const user = await this.authService.checkUser(authToken, remoteIP);
+      return user;
     } catch (err) {
       this.logger.info(err.message);
       return null;

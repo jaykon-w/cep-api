@@ -4,7 +4,6 @@ import * as path from 'path';
 
 dotenvExpand(
   dotenv.config({
-    debug: true,
-    path: path.resolve(process.cwd(), '../.env.dev'),
+    path: path.resolve(__dirname, '../../.env.dev'),
   }),
 );

@@ -1,0 +1,4 @@
+{
+  "jestrunner.configPath": "./api/jest-config.json",
+  "jestrunner.jestPath": "./api/node_modules/.bin/jest"
+}

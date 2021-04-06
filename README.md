@@ -20,11 +20,11 @@ npm test
 
 ## Swagger
 
-[Documentação local](https://localhost:3001/docs)
+[Documentação local](http://localhost:3001/docs)
 
 ## Kibana
 
-[Kibana local](https://localhost:5601)
+[Kibana local](http://localhost:5601)
 
 user: elastic<br>
 password: changeme
